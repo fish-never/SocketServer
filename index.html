@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>IPFS文件传输</title>>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">   
+    <script >
+        var xhr;
+        var ot;//
+        var oloaded;
+        //上传文件方法
+        function UpladFile() {
+            var fileObj = document.getElementById("file").files[0]; // js 获取文件对象
+            var url = "uploadFile"; // 接收上传文件的后台地址 
+
+            var form = new FormData(); // FormData 对象
+            form.append("mf", fileObj); // 文件对象
+
+            xhr = new XMLHttpRequest();  // XMLHttpRequest 对象
+            xhr.open("post", url, true); //post方式，url为服务器请求地址，true 该参数规定请求是否异步处理。
+            xhr.onload = uploadComplete; //请求完成
+            xhr.onerror = uploadFailed; //请求失败
+            xhr.upload.onprogress = progressFunction;//【上传进度调用方法实现】
+            xhr.upload.onloadstart = function () {//上传开始执行方法
+                ot = new Date().getTime();   //设置上传开始时间
+                oloaded = 0;//设置上传开始时，以上传的文件大小为0
+            };
+            xhr.send(form); //开始上传，发送form数据
+        }
+        //上传进度实现方法，上传过程中会频繁调用该方法
+        function progressFunction(evt) {
+
+            var progressBar = document.getElementById("progressBar");
+            var percentageDiv = document.getElementById("percentage");
+            // event.total是需要传输的总字节，event.loaded是已经传输的字节。如果event.lengthComputable不为真，则event.total等于0
+            if (evt.lengthComputable) {//
+                progressBar.max = evt.total;
+                progressBar.value = evt.loaded;
+                percentageDiv.innerHTML = Math.round(evt.loaded / evt.total * 100) + "%";
+            }
+
+            var time = document.getElementById("time");
+            var nt = new Date().getTime();//获取当前时间
+            var pertime = (nt - ot) / 1000; //计算出上次调用该方法时到现在的时间差，单位为s
+            ot = new Date().getTime(); //重新赋值时间，用于下次计算
+
+            var perload = evt.loaded - oloaded; //计算该分段上传的文件大小，单位b       
+            oloaded = evt.loaded;//重新赋值已上传文件大小，用以下次计算
+
+            //上传速度计算
+            var speed = perload / pertime;//单位b/s
+            var bspeed = speed;
+            var units = 'b/s';//单位名称
+            if (speed / 1024 > 1) {
+                speed = speed / 1024;
+                units = 'k/s';
+            }
+            if (speed / 1024 > 1) {
+                speed = speed / 1024;
+                units = 'M/s';
+            }
+            speed = speed.toFixed(1);
+            //剩余时间
+            var resttime = ((evt.total - evt.loaded) / bspeed).toFixed(1);
+            time.innerHTML = '，速度：' + speed + units + '，剩余时间：' + resttime + 's';
+            if (bspeed == 0)
+                time.innerHTML = '上传已取消';
+        }
+        //上传成功响应
+        function uploadComplete(evt) {
+            //服务断接收完文件返回的结果
+            //    alert(evt.target.responseText);
+            alert("上传成功！");
+        }
+        //上传失败
+        function uploadFailed(evt) {
+            alert("上传失败！");
+        }
+        //取消上传
+        function cancleUploadFile() {
+            xhr.abort();
+        }
+    </script>
+    <style>
+        html{    width: 100%;
+    height: 100%;position: relative}
+
+    body,html,h1,h2,h3,h4,h5,div,span,ul,li,p{margin:0;list-style: none;}
+    input{-web-kit-appearance:none; -moz-appearance: none;outline:0;}
+    .page_top {top: 0;right: 0;left: 0;width: 100%;height: 62px;z-index: 41;position: absolute;background: #fff;box-shadow: 0 2px 6px 0 rgba(0, 0, 0, .05);}
+    .page_nav {padding:10px 0 0;width: 194px;height: 100%;top: 62px;left: 0;bottom: 0;z-index: 9;position: absolute;background-color: #f7f7f7;}
+    .page_main{    top: 62px;
+    left: 194px;
+    bottom: 0;
+    right: 10px;
+    z-index: 1;
+    background: #fff;
+    position: absolute;}
+    .nav_li{display: block;
+    position: relative;
+    height: 45px;
+    line-height: 45px;
+    line-height: 46px \9;
+    padding: 0 0 0 15px;
+    font-size: 14px;
+    text-decoration: none;
+    zoom: 1;
+    color: #666;height: 45px;
+    line-height: 45px;
+    line-height: 46px \9;
+    }
+    .active{    color: #09AAFF;background: rgba(0,0,0,.05);}
+    .page_top img{height: 34px;
+    font-size: 12px;
+    margin-top: -17px;
+    position: absolute;
+    z-index: 999;
+    top: 50%;
+    left: 20px;}
+    .page_con{position:absolute;top:0;left:0;bottom:0;right:0;padding:10px;}
+
+    .btn{text-decoration: none;color: #09AAFF;border: 1px solid #C3EAFF;border-radius: 4px;height: 32px;line-height: 32px;padding-left: 10px;}
+    .btn_blue{border: 1px solid #09AAFF;background-color: #09AAFF;color:#fff;}
+    .input_file{position:absolute;right:0;left:0;top:0;bottom:0;width:100%;height:100%;opacity:0;filter:alpha(opacity=0);cursor:pointer;font-size:100px;}  
+    .int_div{position: relative;width:80px;display:inline-block; cursor: pointer;zoom: 1 }
+    .tab_top,.tab_con{overflow: hidden;min-width:800px;}
+    .tab_top li,.li_div div{float:left;}  
+    .file_name{width:40%}
+    .file_percentage{width:20%}
+    .file_date{width:20%}
+    .file_handle{width:20%}
+    .buttonC{position: relative;width:80px;display:inline-block; cursor: pointer;zoom: 1;padding:0; }
+    .ulli{overflow: hidden;min-width:800px;border-bottom:1px solid #f3f3f3;padding:0;}
+    .ulli li{float: left;width:25%;font-size: 14px;font-weight:700;color:#909399;line-height: 23px;padding:12px 0;}
+    .con_li{min-width:800px;padding:0;}
+    .con_li li{overflow: hidden;border-bottom:1px solid #f3f3f3;padding:0;}
+    .con_li li div{float: left;width:25%;font-size: 14px;padding:12px 0;text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-all;
+    line-height: 23px;color:#606266;}
+    .small_btn{height:21px;line-height: 21px;padding:0 5px;}
+    .get_top{padding:10px 0;border-bottom:1px solid #f3f3f3;margin-bottom: 20px;overflow: hidden;}
+    .search_int{-webkit-appearance: none;
+    background-color: #fff;
+    background-image: none;
+    border-radius: 4px;
+    border: 1px solid #dcdfe6;
+    box-sizing: border-box;
+    color: #606266;
+    display: inline-block;
+    font-size: inherit;
+    height: 40px;
+    line-height: 1;
+    outline: none;
+    padding: 0 15px;
+    width: 400px;float:left;}
+    .search_btn{background-color: #f5f7fa;
+    color: #909399;
+    vertical-align: middle;
+    display: table-cell;
+    position: relative;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 20px;
+    width: 38px;
+    white-space: nowrap;font-size: 14px;height: 38px;float:left;line-height: 38px;}
+    .down_li{min-width:800px;padding:0;}
+    .down_li li{overflow: hidden;border-bottom:1px solid #f3f3f3;padding:0;}
+    .down_li li div{float: left;width:40%;font-size: 14px;padding:12px 0;text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-all;
+    line-height: 23px;color:#606266;}
+    .down_li li div.download_div{width:20%;}
+    </style>
+    
+</head>
+
+<body>
+    <div id="app">
+        <div class="page_top">
+            <img src="logo.png"/>
+        </div>
+        <div class="page_con">
+            <ul class="page_nav">
+                <li class="nav_li active">上传文件</li>
+                <li class="nav_li">下载文件</li>
+            </ul>
+            <div class="page_main">
+                <div class="page_con con00">
+
+                    <div class="int_div btn btn_blue">
+                        <input class="input_file" type="file" id="file" name="myfile" />
+                        选择文件
+                    </div>
+                    <ul class="ulli">
+                        <li>文件名</li>
+                        <li>上传进度</li>
+                        <li>大小</li>
+                        <li>操作</li>
+                    </ul>
+                    <ul class="con_li">
+                        <li class="">
+                            <div>index.js</div>
+                            <div>20%</div>
+                            <div>100KB</div>
+                            <div>
+                                <button class="small_btn btn btn_blue upload">上传</button>
+                                <button class="small_btn btn">日志</button>
+                            </div>
+                        </li>
+                        
+                    </ul>
+                        <progress id="progressBar" value="0" max="100" style="width: 300px;"></progress>
+                        <span id="percentage"></span><span id="time"></span>
+                        <br /><br />
+                       
+                        <input type="button" onclick="UpladFile()" value="上传" />
+                        <input type="button" onclick="cancleUploadFile()" value="取消" />
+                </div>
+                <div class="page_con con01" style="display: none;">
+                    <div class="get_top">
+                        <input class="search_int" type="text" value="NDP"/>
+                        <div class="search_btn">搜索</div>
+                    </div>
+                    <ul class="down_li">
+
+                    </ul>
+                </div>
+                    
+            </div>
+        </div>
+    </div>
+</body>
+
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <!-- <script src="https://cdn.bootcss.com/socket.io/2.1.1/socket.io.dev.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+    <script>
+    var socket = io('http://127.0.0.1:9001');
+    socket.connect();
+    socket.on('connect', function(){
+        console.log('连接上了')
+    });
+    socket.on('connect_error', function(error){
+        console.log(error)
+    });
+    socket.on('error', function(error){
+        console.log(error)
+    });
+    socket.on('connect_timeout', function(timeout){
+        console.log(timeout)
+    });
+    socket.on('event', function(data){
+        console.log('连接上了')
+    });
+    socket.on('disconnect', function(){
+        console.log('断开连接')
+    });
+    </script>
+    <script>
+
+        $('.nav_li').on('click',function(){
+            var num =$(this).index()
+            $(this).addClass('active').siblings('li').removeClass('active')
+            $('.con0'+num).fadeIn().siblings('div').fadeOut()
+        })
+        function getFilePath(input){
+            if(input){//input是<input type="file">Dom对象
+                if(window.navigator.userAgent.indexOf("MSIE")>=1){  //如果是IE  
+                    input.select();    
+                return document.selection.createRange().text;    
+                }    
+                else if(window.navigator.userAgent.indexOf("Firefox")>=1){  //如果是火狐  {    
+                    if(input.files){    
+                        return input.files.item(0).getAsDataURL();    
+                    }    
+                    return input.value;    
+                }    
+                return input.value; 
+            }
+        }
+
+        $('#file').change(function(){
+           var files = document.getElementById('file').files[0]
+
+            //$('.con_li').append('<li><span>'+document.getElementById('file').files[0].name+'</span><span>'+getFilePath(document.getElementById('file'))+'</sapn></li>')
+            $('.con_li').append('<li class="" ><div>'+document.getElementById('file').files[0].name+'</div><div>20%</div><div>'+document.getElementById('file').files[0].size+'KB</div><div><button class="small_btn btn btn_blue upload" data-path="'+getFilePath(document.getElementById('file'))+'">上传</button><button class="small_btn btn">日志</button></div></li>')
+        });
+        $('.con_li').on('click', '.upload', function(e){
+            var obj=e.currentTarget; 
+            var path =$(obj).attr('data-path')
+            $.get('http://localhost:8080/add?path='+path,function(data){
+                        console.log(data)
+                    })
+        })
+        $('.search_btn').on('click',function(){
+            var val=$('.search_int')[0].value
+            // $.get('http://localhost:8080/getHashList?key='+val,function(data){
+            //     console.log(data)
+            // })
+            $('.down_li').append('<li class="" ><div>NDP462-KB3151802-Web.exe</div><div>QmTx7uQQYQUmabWM1CeUPvHtm7Yh1kHAAH56NahX2Wym8w</div><div class="download_div"><button class="small_btn btn btn_blue download" data-id="QmTx7uQQYQUmabWM1CeUPvHtm7Yh1kHAAH56NahX2Wym8w">下载</button></div></li>')
+
+        })
+        $('.down_li').on('click', '.download', function(e){
+            var obj=e.currentTarget; 
+            var id =$(obj).attr('data-id')
+            $.get('http://localhost:8080/get?id='+id,function(data){
+                        console.log(data)
+                    })
+        })
+    </script>
+</body>
+
+</html>
